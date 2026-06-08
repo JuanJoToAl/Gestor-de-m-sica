@@ -1,5 +1,3 @@
-
-
 package gestor_de_musica;
 
 /**
@@ -11,12 +9,15 @@ package gestor_de_musica;
  */
 public class ReproductorLogico {
 
-    // === ESTRUCTURA 1: LISTA DOBLE ENLAZADA (Playlist Base) ===
+    // ESTRUCTURA 1: Lista doblemente enlazada para la playlist principal
     private NodoDoble cabeza;
     private NodoDoble cola;
-    private NodoDoble actual; // Puntero clave: rastrea la canción que está sonando
+    private NodoDoble actual;
 
-    // === ESTRUCTURA 2: COLA / QUEUE (Fila de espera "A continuación") ===
+    // Indice que representa la posicion de la cancion actual en la playlist
+    private int indiceActual;
+
+    // ESTRUCTURA 2: Cola FIFO para las canciones en espera de reproduccion
     private NodoSimple frente;
     private NodoSimple fin;
 
@@ -24,21 +25,19 @@ public class ReproductorLogico {
         this.cabeza = null;
         this.cola = null;
         this.actual = null;
+        this.indiceActual = -1; // Comienza en -1 indicando playlist vacia
         this.frente = null;
         this.fin = null;
     }
 
-    /**
-     * Añade una canción al final de la playlist principal (Lista Doble).
-     * Eficiencia: O(1) gracias al puntero 'cola'.
-     * @param cancion
-     */
+    // Agrega una cancion al final de la playlist principal
     public void agregarAPlaylist(Cancion cancion) {
         NodoDoble nuevoNodo = new NodoDoble(cancion);
         if (cabeza == null) {
             cabeza = nuevoNodo;
             cola = nuevoNodo;
-            actual = nuevoNodo; // La primera canción agregada queda como actual
+            actual = nuevoNodo;
+            indiceActual = 0; // Primera cancion agregada tiene indice 0
         } else {
             cola.siguiente = nuevoNodo;
             nuevoNodo.anterior = cola;
@@ -46,13 +45,8 @@ public class ReproductorLogico {
         }
     }
 
-    /**
-     * Añade una canción a la fila de espera "A continuación" (Cola FIFO).
-     * El usuario elige qué escuchar después sin alterar el orden de la playlist.
-     * Eficiencia: O(1) gracias al puntero 'fin'.
-     * @param cancion
-     */
-    public void agregarAColaEspera(Cancion cancion) {
+    // Agrega una cancion a la cola de espera de reproduccion (FIFO)
+    public void agregarACola(Cancion cancion) {
         NodoSimple nuevoNodo = new NodoSimple(cancion);
         if (frente == null) {
             frente = nuevoNodo;
@@ -63,57 +57,49 @@ public class ReproductorLogico {
         }
     }
 
-    /**
-     * Determina la siguiente canción a reproducir.
-     * REGLA DE NEGOCIO: Prioriza la fila de espera (Cola). Si está vacía,
-     * avanza al siguiente elemento de la playlist (Lista Doble).
-     * @return Objeto Cancion que debe sonar, o null si ya no hay más música.
-     */
+    // Determina la siguiente cancion, priorizando la cola de espera
     public Cancion reproducirSiguiente() {
-        // 1. Verificamos si hay canciones prioritarias en la Cola de Espera (FIFO)
+        // Valida primero si hay elementos en la cola de espera
         if (frente != null) {
             Cancion cancionSiguiente = frente.cancion;
-            frente = frente.siguiente; // Desencolar
+            frente = frente.siguiente; // Desencola la cancion
             if (frente == null) {
-                fin = null; // Si la cola quedó vacía, limpiamos el puntero final
+                fin = null; // Resetea fin si queda vacia
             }
-            return cancionSiguiente; 
-            // NOTA: Al salir de la cola, no movemos el puntero 'actual' de la lista doble
-            // para que cuando termine la cola, el usuario regrese a donde iba en su álbum.
+            return cancionSiguiente; // No se altera el indiceActual de la playlist
         }
 
-        // 2. Si la cola está vacía, avanzamos en la Lista Doble Enlazada
+        // Si la cola esta vacia, avanza en la lista doblemente enlazada
         if (actual != null && actual.siguiente != null) {
             actual = actual.siguiente;
+            indiceActual++; // Incrementa el indice de la playlist
             return actual.cancion;
         }
 
-        return null; // Fin de la playlist y sin canciones en cola
+        return null; // Retorna null si no hay mas canciones
     }
 
-    /**
-     * Retrocede a la canción anterior en la playlist.
-     * Las canciones en la fila de espera no afectan al historial hacia atrás.
-     * Eficiencia: O(1) gracias al puntero 'anterior' de la Lista Doble.
-     * @return Objeto Cancion anterior, o null si ya está en la primera canción.
-     */
+    // Retrocede a la cancion anterior en la playlist
     public Cancion reproducirAnterior() {
+        // Valida si se puede retroceder en la lista doblemente enlazada
         if (actual != null && actual.anterior != null) {
             actual = actual.anterior;
+            indiceActual--; // Decrementa el indice de la playlist
             return actual.cancion;
         }
-        return null; // Ya está al inicio de la lista
+        return null; // Retorna null si ya esta al inicio de la playlist
     }
 
-    /**
-     * Devuelve la canción que está seleccionada actualmente en la playlist.
-     * @return 
-     */
+    // Devuelve la cancion actual de la playlist
     public Cancion getCancionActual() {
         if (actual != null) {
             return actual.cancion;
         }
         return null;
     }
-}
 
+    // Devuelve el indice actual de la reproduccion en la playlist
+    public int getIndiceActual() {
+        return this.indiceActual;
+    }
+}
