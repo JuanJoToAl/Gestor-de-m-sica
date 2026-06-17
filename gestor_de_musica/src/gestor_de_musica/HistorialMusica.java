@@ -26,4 +26,26 @@ public class HistorialMusica {
     public boolean estaVacio() {
         return tope == null;
     }
+    
+    // MÉTODO CORREGIDO: Recorre los nodos uno a uno sin destruirlos
+    public void mostrarHistorialCompleto() {
+        if (this.estaVacio()) { 
+            System.out.println("El historial está vacío. ¡Pon a sonar algunas canciones primero!");
+            return;
+        }
+
+        System.out.println("Mostrando últimas reproducciones (de la más reciente a la más antigua):\n");
+        
+        // Creamos un nodo auxiliar para no perder ni modificar la referencia del "tope" real
+        NodoPila actual = tope; 
+        
+        // El bucle continuará bajando por la pila hasta que no queden más nodos (abajo sea null)
+        while (actual != null) {
+            Cancion c = actual.cancion;
+            System.out.println(c.getTitulo() + " - " + c.getArtista() + " [" + c.getGenero() + "]");
+            
+            // Avanzamos al nodo que está abajo en la pila
+            actual = actual.abajo; 
+        }
+    }
 }

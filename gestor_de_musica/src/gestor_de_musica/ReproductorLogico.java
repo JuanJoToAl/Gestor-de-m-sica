@@ -13,6 +13,7 @@ public class ReproductorLogico {
     private NodoSimple frente;
     private NodoSimple fin;
 
+    // Controladores globales para el manejo físico del audio de JLayer
     private Player reproductorMP3; 
     private Thread hiloMusica;
     
@@ -51,7 +52,7 @@ public class ReproductorLogico {
         }
     }
 
-// Avanzar y reproducir la siguiente canción
+    // Avanzar y reproducir la siguiente canción
     public Cancion reproducirSiguiente() {
         Cancion cancionAProcesar = null;
 
@@ -69,7 +70,7 @@ public class ReproductorLogico {
             actual = actual.siguiente;
         }
         
-        // Si encontramos una canción se manda a sonar
+        // Si encontramos una canción se manda a sonar de forma física
         if (cancionAProcesar != null) {
             reproducirAudioReal(cancionAProcesar.getRutaArchivo());
         }
@@ -83,7 +84,7 @@ public class ReproductorLogico {
             actual = actual.anterior;
             Cancion cancionAnterior = actual.cancion;
             
-            // >>> MANDAR A SONAR LA CANCIÓN ANTERIOR FÍSICAMENTE
+            // Manda a sonar la canción anterior físicamente controlando el flujo
             reproducirAudioReal(cancionAnterior.getRutaArchivo());
             
             return cancionAnterior; 
@@ -98,22 +99,25 @@ public class ReproductorLogico {
         }
         return null;
     }
-    // MÉTODO PARA REPRODUCIR EL AUDIO EN SEGUNDO PLANO
-    public void reproducirAudioReal(String ruta) {
-        detenerMusica(); // Apaga la canción anterior si había una sonando
 
-        if (ruta == null || ruta.isEmpty()) {
-            System.out.println("⚠️ Esta canción no tiene una ruta de archivo MP3 configurada.");
+    // MÉTODO PARA REPRODUCIR EL AUDIO EN SEGUNDO PLANO 
+    public void reproducirAudioReal(String ruta) {
+        detenerMusica(); // Apaga la canción anterior de golpe si había una sonando
+
+        // Validación en caso de que la ruta esté vacía o pertenezca a una canción simulada sin MP3
+        if (ruta == null || ruta.trim().isEmpty()) {
+            System.out.println("\n⚠️ [Aviso] Esta canción no tiene una ruta de archivo MP3 configurada.");
             return;
         }
 
+        // Inicializamos el Hilo para evitar la congelación de la consola de NetBeans
         hiloMusica = new Thread(() -> {
             try {
                 FileInputStream fis = new FileInputStream(ruta);
                 reproductorMP3 = new Player(fis);
-                reproductorMP3.play(); // Aquí se queda sonando la música
+                reproductorMP3.play(); // Aquí empieza a sonar la música en segundo plano
             } catch (Exception e) {
-                System.out.println("⚠️ Error físico al reproducir: " + e.getMessage());
+                System.out.println("\n⚠️ Error físico al reproducir: " + e.getMessage());
             }
         });
 
