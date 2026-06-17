@@ -90,11 +90,14 @@ public class Gestor_de_musica {
                     System.out.print("Ingrese Género: ");
                     String genero = teclado.nextLine();
                     
-                    // SOLICITUD DE LA RUTA MP3 REAL
-                    System.out.print("Ingrese ruta del archivo MP3 (ej: musica/nombre.mp3): ");
-                    String ruta = teclado.nextLine().trim();
+                    // SOLICITUD DEL NOMBRE DEL ARCHIVO (CONCATENACIÓN AUTOMÁTICA)
+                    System.out.print("Ingrese solo el nombre del archivo (ej: bohemian_rhapsody): ");
+                    String nombreArchivo = teclado.nextLine().trim();
 
-                    // Instanciar el objeto con el constructor de 5 parámetros incluyendo la ruta
+                    // Construimos la ruta completa de forma interna agregando "musica/" al inicio y ".mp3" al final
+                    String ruta = "musica/" + nombreArchivo + ".mp3";
+
+                    // Instanciar el objeto con el constructor de 5 parámetros incluyendo la ruta automatizada
                     Cancion nueva = new Cancion(id, titulo, artNombre, genero, ruta);
                     
                     // A. Insertar en las estructuras en memoria (Disponibilidad inmediata)

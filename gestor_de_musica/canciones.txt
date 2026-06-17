@@ -1,4 +1,6 @@
-1|In the End|Linkin Park|Rock|musica/Faint (Official Music Video) [4K UPGRADE]  Linkin Park.mp3
-2|Bring Me to Life|Evanescence|Rock|
-3|Billie Jean|Michael Jackson|Pop|
-4|Uptown Funk|Bruno Mars|Pop|5|Two Faced|Linkin Park|Rock|musica/Two Faced (Official Music Video) - Linkin Park.mp3
+1|Faint|Linkin Park|Rock|musica/Faint (Official Music Video) [4K UPGRADE]  Linkin Park.mp3
+2|Two Faced|Linkin Park|Rock|musica/Two Faced (Official Music Video) - Linkin Park.mp3
+3|Under Pressure|Queen|Rock|musica/Queen and David Bowie - Under Pressure (Official Video).mp3
+4|Radio Ga Ga|Queen|Rock|musica/Queen - Radio Ga Ga (1984).mp3
+5|I Want It All|Queen|Rock|musica/Queen - I Want It All (Official Lyric Video).mp3
+6|I Want To Break Free|Queen|Rock|musica/Queen - I Want to Break Free (Official Lyric Video).mp3
