@@ -4,13 +4,16 @@ Un gestor de música hecho por estudiantes de la nacho
 # Diagrama UML
 ```mermaid
 classDiagram
-    class SoundWaveApp {
-        - CatalogoMusical catalogo
-        - ReproductorLogico reproductor
-        - RankingServicio ranking
-        - RecomendadorConexiones recomendador
-        + main(String[] args)
-        + mostrarMenu()
+    direction TB
+
+    %% --- ENTIDADES BÁSICAS ---
+    class Artista {
+        - String nombre
+        - String genero
+        + Artista(String nombre, String genero)
+        + getNombre() String
+        + getGenero() String
+        + toString() String
     }
 
     class Cancion {
@@ -20,56 +23,108 @@ classDiagram
         - String genero
         - int reproducciones
         + Cancion(String id, String titulo, String artista, String genero)
-        + incrementarReproducciones()
         + getId() String
         + getTitulo() String
         + getArtista() String
-        + getReproducciones() int
-    }
-
-    class Artista {
-        - String nombre
-        - String genero
-        + Artista(String nombre, String genero)
-        + getNombre() String
         + getGenero() String
+        + getReproducciones() int
+        + incrementarReproducciones() void
+        + toString() String
     }
 
+    %% --- NODOS ESTRUCTURALES ---
+    class NodoSimple {
+        + Cancion cancion
+        + NodoSimple siguiente
+        + NodoSimple(Cancion cancion)
+    }
+
+    class NodoDoble {
+        + Cancion cancion
+        + NodoDoble siguiente
+        + NodoDoble anterior
+        + NodoDoble(Cancion cancion)
+    }
+
+    class NodoPila {
+        + Cancion cancion
+        + NodoPila abajo
+        + NodoPila(Cancion cancion)
+    }
+
+    %% --- MÓDULOS DEL SISTEMA ---
     class CatalogoMusical {
-        - Map~String, Cancion~ tablaHash
-        + insertarCancion(Cancion c)
+        - HashMap~String, Cancion~ tablaCanciones
+        - HashMap~String, Cancion~ indicePorId
+        + CatalogoMusical()
+        + insertarCancion(Cancion c) void
         + buscarCancion(String titulo) Cancion
+        + buscarPorId(String id) Cancion
+        + eliminarCancion(String titulo) boolean
+        + obtenerTodas() List~Cancion~
+        + buscarPorGenero(String genero) List~Cancion~
+        + size() int
+        + mostrarCatalogo() void
     }
 
     class ReproductorLogico {
-        - List~Cancion~ playlistDoble
-        - Queue~Cancion~ filaEspera
-        - int indiceActual
-        + agregarACola(Cancion c)
+        + NodoDoble cabeza
+        + NodoDoble cola
+        + NodoDoble actual
+        + NodoSimple frente
+        + NodoSimple fin
+        + agregarAPlaylist(Cancion cancion) void
+        + agregarAColaEspera(Cancion cancion) void
         + reproducirSiguiente() Cancion
         + reproducirAnterior() Cancion
+        + getCancionActual() Cancion
     }
 
     class RankingServicio {
         - PriorityQueue~Cancion~ maxHeap
-        + actualizarReproduccion(Cancion c)
+        + RankingServicio()
+        + actualizarReproduccion(Cancion c) void
         + obtenerTop5() List~Cancion~
+        + getHeap() PriorityQueue~Cancion~
+    }
+
+    class HistorialMusica {
+        - NodoPila tope
+        + HistorialMusica()
+        + escucharCancion(Cancion c) void
+        + obtenerUltimaEscuchada() Cancion
+        + estaVacio() boolean
     }
 
     class RecomendadorConexiones {
-        - Map~String, List~String~~ grafoArtistas
-        + conectarArtistas(String a1, String a2)
-        + recomendarSimilares(String artista) List~String~
+        - Map~Artista, List~Artista~~ grafoArtistas
+        + RecomendadorConexiones()
+        + conectarArtistas(Artista a1, Artista a2) void
+        + recomendarSimilares(Artista a) List~Artista~
     }
 
-    SoundWaveApp --> CatalogoMusical : coordina
-    SoundWaveApp --> ReproductorLogico : coordina
-    SoundWaveApp --> RankingServicio : coordina
-    SoundWaveApp --> RecomendadorConexiones : coordina
-    CatalogoMusical --> Cancion : almacena
-    ReproductorLogico --> Cancion : agenda
-    RankingServicio --> Cancion : prioriza
-    RecomendadorConexiones --> Artista : relaciona
+    class Gestor_de_musica {
+        + main(String[] args) static
+    }
+
+    %% --- RELACIONES DE ESTRUCTURA Y COMPOSICIÓN ---
+    NodoSimple --> Cancion : contiene
+    NodoDoble --> Cancion : contiene
+    NodoPila --> Cancion : contiene
+
+    CatalogoMusical --> Cancion : almacena (Hash)
+    RankingServicio --> Cancion : ordena (Heap/Árbol)
+    RecomendadorConexiones --> Artista : relaciona (Grafo)
+
+    ReproductorLogico --> NodoDoble : usa (Lista Doble)
+    ReproductorLogico --> NodoSimple : usa (Cola FIFO)
+    HistorialMusica --> NodoPila : usa (Pila LIFO)
+
+    Gestor_de_musica ..> CatalogoMusical : coordina
+    Gestor_de_musica ..> ReproductorLogico : coordina
+    Gestor_de_musica ..> RankingServicio : coordina
+    Gestor_de_musica ..> HistorialMusica : coordina
+    Gestor_de_musica ..> RecomendadorConexiones : coordina
 ```
 
 # 🎵 SoundWave - Distribución de Roles y Tareas del Proyecto
