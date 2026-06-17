@@ -4,104 +4,127 @@ Un gestor de música hecho por estudiantes de la nacho
 # Diagrama UML
 ```mermaid
 classDiagram
-    class Gestor_de_musica {
-        +main(args: String[]) void
-    }
+    direction TB
 
+    %% --- ENTIDADES BÁSICAS ---
     class Artista {
-        -nombre: String
-        -genero: String
-        +Artista(nombre: String, genero: String)
-        +getNombre() String
-        +getGenero() String
-        +setNombre(nombre: String) void
-        +setGenero(genero: String) void
+        - String nombre
+        - String genero
+        + Artista(String nombre, String genero)
+        + getNombre() String
+        + getGenero() String
+        + toString() String
     }
 
     class Cancion {
-        -titulo: String
-        -artista: Artista
-        +Cancion(titulo: String, artista: Artista)
-        +getTitulo() String
-        +getArtista() Artista
-        +setTitulo(titulo: String) void
-        +setArtista(artista: Artista) void
+        - String id
+        - String titulo
+        - String artista
+        - String genero
+        - int reproducciones
+        + Cancion(String id, String titulo, String artista, String genero)
+        + getId() String
+        + getTitulo() String
+        + getArtista() String
+        + getGenero() String
+        + getReproducciones() int
+        + incrementarReproducciones() void
+        + toString() String
     }
 
-    class CatalogoMusical {
-        +CatalogoMusical()
-        +agregarCancion(cancion: Cancion) void
-        +mostrarCatalogo() void
-    }
-
-    class ReproductorLogico {
-        -cabeza: NodoDoble
-        -cola: NodoDoble
-        -actual: NodoDoble
-        -frente: NodoSimple
-        -fin: NodoSimple
-        +ReproductorLogico()
-        +agregarAPlaylist(cancion: Cancion) void
-        +agregarAColaEspera(cancion: Cancion) void
-        +reproducirSiguiente() Cancion
-        +reproducirAnterior() Cancion
-        +getCancionActual() Cancion
-    }
-
-    class HistorialMusica {
-        -top: NodoPila
-        +HistorialMusica()
-        +registrarReproduccion(cancion: Cancion) void
-        +mostrarHistorial() void
-    }
-
-    class RankingServicio {
-        +RankingServicio()
-        +registrarReproduccion(cancion: Cancion) void
-        +obtenerTopCanciones() void
-    }
-
-    class RecomendadorConexiones {
-        +RecomendadorConexiones()
-        +obtenerRecomendaciones(cancion: Cancion) void
-    }
-
+    %% --- NODOS ESTRUCTURALES ---
     class NodoSimple {
-        +cancion: Cancion
-        +siguiente: NodoSimple
-        +NodoSimple(cancion: Cancion)
+        + Cancion cancion
+        + NodoSimple siguiente
+        + NodoSimple(Cancion cancion)
     }
 
     class NodoDoble {
-        +cancion: Cancion
-        +siguiente: NodoDoble
-        +anterior: NodoDoble
-        +NodoDoble(cancion: Cancion)
+        + Cancion cancion
+        + NodoDoble siguiente
+        + NodoDoble anterior
+        + NodoDoble(Cancion cancion)
     }
 
     class NodoPila {
-        +cancion: Cancion
-        +siguiente: NodoPila
-        +NodoPila(cancion: Cancion)
+        + Cancion cancion
+        + NodoPila abajo
+        + NodoPila(Cancion cancion)
     }
 
-    %% --- RELACIONES DEL SISTEMA ---
-    Gestor_de_musica ..> CatalogoMusical : instanciar / usa
-    Gestor_de_musica ..> ReproductorLogico : instanciar / usa
-    Gestor_de_musica ..> RankingServicio : instanciar / usa
-    Gestor_de_musica ..> HistorialMusica : instanciar / usa
-    Gestor_de_musica ..> RecomendadorConexiones : instanciar / usa
-    
-    Cancion o--> Artista : agregación (tiene un)
-    CatalogoMusical "1" *--> "*" Cancion : composición (almacena)
-    
-    ReproductorLogico "1" *--> "*" NodoDoble : composición (Estructura Playlist)
-    ReproductorLogico "1" *--> "*" NodoSimple : composición (Estructura ColaEspera)
-    HistorialMusica "1" *--> "*" NodoPila : composición (Estructura Stack/Pila)
-    
-    NodoSimple --> Cancion : referencia / contiene
-    NodoDoble --> Cancion : referencia / contiene
-    NodoPila --> Cancion : referencia / contiene
+    %% --- MÓDULOS DEL SISTEMA ---
+    class CatalogoMusical {
+        - HashMap~String, Cancion~ tablaCanciones
+        - HashMap~String, Cancion~ indicePorId
+        + CatalogoMusical()
+        + insertarCancion(Cancion c) void
+        + buscarCancion(String titulo) Cancion
+        + buscarPorId(String id) Cancion
+        + eliminarCancion(String titulo) boolean
+        + obtenerTodas() List~Cancion~
+        + buscarPorGenero(String genero) List~Cancion~
+        + size() int
+        + mostrarCatalogo() void
+    }
+
+    class ReproductorLogico {
+        + NodoDoble cabeza
+        + NodoDoble cola
+        + NodoDoble actual
+        + NodoSimple frente
+        + NodoSimple fin
+        + agregarAPlaylist(Cancion cancion) void
+        + agregarAColaEspera(Cancion cancion) void
+        + reproducirSiguiente() Cancion
+        + reproducirAnterior() Cancion
+        + getCancionActual() Cancion
+    }
+
+    class RankingServicio {
+        - PriorityQueue~Cancion~ maxHeap
+        + RankingServicio()
+        + actualizarReproduccion(Cancion c) void
+        + obtenerTop5() List~Cancion~
+        + getHeap() PriorityQueue~Cancion~
+    }
+
+    class HistorialMusica {
+        - NodoPila tope
+        + HistorialMusica()
+        + escucharCancion(Cancion c) void
+        + obtenerUltimaEscuchada() Cancion
+        + estaVacio() boolean
+    }
+
+    class RecomendadorConexiones {
+        - Map~Artista, List~Artista~~ grafoArtistas
+        + RecomendadorConexiones()
+        + conectarArtistas(Artista a1, Artista a2) void
+        + recomendarSimilares(Artista a) List~Artista~
+    }
+
+    class Gestor_de_musica {
+        + main(String[] args) static
+    }
+
+    %% --- RELACIONES DE ESTRUCTURA Y COMPOSICIÓN ---
+    NodoSimple --> Cancion : contiene
+    NodoDoble --> Cancion : contiene
+    NodoPila --> Cancion : contiene
+
+    CatalogoMusical --> Cancion : almacena (Hash)
+    RankingServicio --> Cancion : ordena (Heap/Árbol)
+    RecomendadorConexiones --> Artista : relaciona (Grafo)
+
+    ReproductorLogico --> NodoDoble : usa (Lista Doble)
+    ReproductorLogico --> NodoSimple : usa (Cola FIFO)
+    HistorialMusica --> NodoPila : usa (Pila LIFO)
+
+    Gestor_de_musica ..> CatalogoMusical : coordina
+    Gestor_de_musica ..> ReproductorLogico : coordina
+    Gestor_de_musica ..> RankingServicio : coordina
+    Gestor_de_musica ..> HistorialMusica : coordina
+    Gestor_de_musica ..> RecomendadorConexiones : coordina
 ```
 
 # 🎵 SoundWave - Distribución de Roles y Tareas del Proyecto
