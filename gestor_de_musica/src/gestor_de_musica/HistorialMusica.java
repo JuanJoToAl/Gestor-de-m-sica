@@ -27,7 +27,7 @@ public class HistorialMusica {
         return tope == null;
     }
     
-    // MÉTODO CORREGIDO: Recorre los nodos uno a uno sin destruirlos
+    // Recorre los nodos uno a uno sin destruirlos
     public void mostrarHistorialCompleto() {
         if (this.estaVacio()) { 
             System.out.println("El historial está vacío. ¡Pon a sonar algunas canciones primero!");
