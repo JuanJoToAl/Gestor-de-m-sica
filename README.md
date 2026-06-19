@@ -216,6 +216,47 @@ graph LR
 
 ---
 
+## ¿Qué ocurre bajo el capó en el Menú Principal?
+
+Esta sección describe detalladamente el comportamiento algorítmico interno del sistema ante la interacción del usuario en la consola. Sirve como bitácora técnica para justificar las operaciones en memoria.
+
+### Opción 1: Ver Catálogo Completo (Tabla Hash)
+* **Operación Interna:** El programa accede a la instancia única de `CatalogoMusical`. Internamente invoca un iterador sobre el `entrySet()` o el `values()` del `HashMap`.
+* **Mecánica Algorítmica:** Aunque la búsqueda de un elemento individual toma un tiempo constante O(1), listar el catálogo entero requiere recorrer todos los baldes ocupados de la tabla hash, lo cual se ejecuta en un tiempo lineal de **O(N)**, donde N es la cantidad total de canciones registradas.
+
+### Opción 2: Subir/Registrar nueva canción manualmente
+* **Operación Interna:** Solicita por consola el título de la canción, el nombre del artista y su género. 
+* **Mecánica Algorítmica:** Instancia un nuevo objeto `Artista` y un objeto `Cancion`. Posteriormente ejecuta la operación `mapa.put(titulo.toLowerCase(), nuevaCancion)`. La Tabla Hash calcula el valor hash del string de entrada y ubica el nodo en la dirección de memoria correspondiente en un tiempo de **O(1)**. Adicionalmente, el objeto `Artista` se evalúa en el módulo del Grafo para verificar si debe conectarse con nodos preexistentes del mismo género.
+
+### Opción 3: Agregar canción a la Fila de Espera (Cola FIFO)
+* **Operación Interna:** El usuario digita el título de la canción que desea encolar.
+* **Mecánica Algorítmica:** Primero se realiza una comprobación de existencia mediante `mapa.containsKey(titulo)`. Si la canción existe (acceso O(1)), se extrae la referencia del objeto y se invoca el método del reproductor para añadir a la cola. El programa crea un `NodoSimple` y modifica los punteros de la estructura FIFO: `fin.siguiente = nuevoNodo; fin = nuevoNodo;`. No se duplica la información de la canción en memoria, solo se enlaza su referencia lógica.
+
+### Opción 4: Reproducir Siguiente Canción (Avanzar / Coherencia de módulos)
+* **Operación Interna:** Esta es la función central de control y el punto más crítico en la integración del sistema. Activa cambios concurrentes en múltiples estructuras:
+    1. **Estructura Fila de Espera (Cola FIFO):** El reproductor evalúa si el puntero `frente` es diferente de nulo. Si contiene nodos, extrae la canción aplicando un desencolado clásico (`frente = frente.siguiente`) y la reproduce.
+    2. **Estructura Playlist (Lista Doble):** Si la cola de espera se encuentra vacía, el reproductor consulta el puntero `actual` de la lista doble y avanza a la siguiente posición mediante `actual = actual.siguiente`.
+    3. **Estructura Historial (Pila LIFO):** Una vez seleccionada la canción por cualquiera de los dos mecanismos anteriores, se realiza una operación de inserción (Push) en el tope de la pila del historial, actualizando la referencia `top`.
+    4. **Estructura Ranking (Max-Heap):** Se incrementa en 1 el contador interno de reproducciones del objeto `Cancion`. Debido a que las colas de prioridad nativas de Java no reordenan dinámicamente un elemento si cambian sus propiedades internas de ordenamiento, el módulo de ranking realiza un procedimiento seguro de remoción y reinserción: `priorityQueue.remove(cancion); priorityQueue.add(cancion);`, forzando el reacomodo del árbol binario en un tiempo de **O(log n)**.
+
+### Opción 5: Ver Historial de reproducción (Pila LIFO)
+* **Operación Interna:** Muestra las pistas que han sonado en orden cronológico inverso (desde la más reciente hasta la más antigua).
+* **Mecánica Algorítmica:** Para evitar vaciar la pila mediante operaciones consecutivas de Pop (lo que destruiría los datos), el sistema implementa un recorrido de consulta pura. Se inicializa un puntero temporal `auxiliar = top` y se ejecuta un ciclo estructurado que imprime el contenido del nodo y se desplaza mediante `auxiliar = auxiliar.siguiente` hasta encontrar un valor nulo. El costo del recorrido completo es lineal **O(K)**, donde K es el número de canciones escuchadas.
+
+### Opción 6: Ver Top 5 canciones más escuchadas (Heap/Árbol)
+* **Operación Interna:** Despliega en pantalla los 5 registros con mayor índice de uso.
+* **Mecánica Algorítmica:** El Max-Heap garantiza que la raíz siempre es el elemento con más reproducciones. Para obtener el top 5 sin alterar de manera permanente la cola de prioridad original, el sistema clona de manera superficial la estructura o extrae los 5 valores máximos consecutivamente guardándolos en un contenedor temporal, para posteriormente reinsertarlos. Cada extracción del valor máximo cuesta **O(log n)** debido al proceso de reorganización (down-heapify) que realiza el árbol.
+
+### Opción 7: Ver recomendaciones de artistas similares (Grafo)
+* **Operación Interna:** Utiliza la información del artista de la canción en reproducción o solicita el nombre de un artista por consola.
+* **Mecánica Algorítmica:** El sistema busca el objeto `Artista` como clave dentro del `HashMap` que representa la lista de adyacencia del grafo. Al recuperarlo en **O(1)**, se obtiene acceso directo a la lista enlazada de artistas vecinos (aquellos que comparten su mismo género). El algoritmo itera sobre este conjunto acotado de nodos adyacentes para imprimirlos en consola, simulando un recorrido de Anchura (BFS) limitado exclusivamente a un nivel de profundidad.
+
+### Opción 8: Detener Música (Apagar el reproductor)
+* **Operación Interna:** Suspende los flujos automáticos de reproducción en consola.
+* **Mecánica Algorítmica:** Cambia una bandera booleana de estado en la aplicación principal (ej. `estaReproduciendo = false`). Desde el punto de vista de las estructuras de datos, detiene los avances automáticos del puntero `actual` en la lista doblemente enlazada y congela temporalmente las mutaciones sobre la pila del historial y el heap de estadísticas hasta que se reanude la actividad.
+
+---
+
 ## Dinámica de Coherencia de Módulos
 
 La principal virtud del proyecto es la interconexión sistémica. Cuando el usuario decide reproducir una canción, se desata una reacción en cadena que demuestra el uso simultáneo de las estructuras:
@@ -229,12 +270,12 @@ sequenceDiagram
     participant Rank as RankingServicio (Max-Heap)
     participant Hist as HistorialMusica (Pila LIFO)
     
-    Usuario->>Main: Selecciona Reproducir Siguiente
+    Usuario->>Main: Selecciona Opción 4 (Reproducir Siguiente)
     Main->>Rep: Invocación de reproducirSiguiente()
     Note over Rep: Revisa Cola FIFO primero.<br>Si está vacía, avanza en la Lista Doble.
     Rep->>Main: Retorna Objeto Cancion seleccionado
-    Main->>Rank: Invocación de actualizarReproduccion(cancion)
-    Note over Rank: Actualiza contador y reordena el Max-Heap
-    Main->>Hist: Invocación de escucharCancion(cancion)
-    Note over Hist: Push en el tope de la Pila LIFO
+    Main->>Rank: Invocación de registrarReproduccion(cancion)
+    Note over Rank: Actualiza contador y reordena el Max-Heap (O(log n))
+    Main->>Hist: Invocación de registrarReproduccion(cancion)
+    Note over Hist: Push en el tope de la Pila LIFO (O(1))
 ```
